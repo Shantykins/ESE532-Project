@@ -1,20 +1,24 @@
 #include <iostream>
+#include "App.h"
 
 //
 // DO NOT COMPILE. WILL NOT WORK.
 //
 
-int main()
+void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 {
     //
-    // Read Data from Encoder.cpp
+    // This is what CDC returns. 
+    // Declared statically, since malloc adds to latency. 
+    // NUM_ELEMENTS + HEADER : Max size of each packet, hence max size of chunks
+    // CDC_OUTPUT_SIZE TO BE MODIFIED LATER
     //
-
+    int arrayOfChunkIndices[CDC_OUTPUT_SIZE];
 
     //
     // RUN CDC
     //
-    cdc();
+    runCDC(inputBuf, arrayOfChunkIndices, length);
 
     //
     // SHA table
@@ -29,7 +33,4 @@ int main()
 
     run_LZW();
 
-
-
-    return 0;
 }

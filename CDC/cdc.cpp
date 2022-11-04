@@ -4,7 +4,7 @@
 #include <math.h>
 #include <iostream>
 #include "Stopwatch.h"
-#include "App.h"
+#include "../App.h"
 
 #define WIN_SIZE 16
 #define PRIME 3
@@ -29,25 +29,35 @@ uint64_t hash_func(unsigned char *input, unsigned int pos)
 	return hashOut;
 }
 
-void cdc(unsigned char *buff,  unsigned int  start,  unsigned int  end)
+void cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 {
 	// put your cdc implementation here
 	unsigned int i; 
-    uint64_t currHash = hash_func(buff, start + WIN_SIZE);
+    uint64_t currHash = hash_func(buff, 0 + WIN_SIZE);
+	int chunkCount = 0;
 
-	for(i = start + WIN_SIZE; i <= end-WIN_SIZE; i++)
+	for(i = 0 + WIN_SIZE; i < length-WIN_SIZE; i++)
 	{
 		if((currHash % MODULUS) == TARGET)
 		{
-			std::cout<<std::endl<<i<<std::endl;
+			//std::cout<<std::endl<<i<<std::endl;
+
+			outputBuf[chunkCount++] = i;
 		}
 
         currHash = currHash * PRIME - ((uint64_t)buff[i] * pow(PRIME, WIN_SIZE+1)) + ((uint64_t)buff[i + WIN_SIZE] * PRIME);
 	}
 }
 
-void test_cdc( const char* file )
+void runCDC(inputBuf, arrayOfChunkIndices, length)
 {
+
+	//
+	// Did it like this to allow for threading in the future
+	//
+	cdcInstance(inputBuf, arrayOfChunkIndices, length);
+
+	/*
 	FILE* fp = fopen(file,"r" );
 	if(fp == NULL ){
 		perror("fopen error");
@@ -94,5 +104,6 @@ void test_cdc( const char* file )
 	std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
 
     free(buff);
-    return;
+
+	*/
 }
