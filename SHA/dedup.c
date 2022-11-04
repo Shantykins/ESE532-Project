@@ -1,11 +1,10 @@
 
 static int elements = 0; // This has to be global variable to keep track of number of elements in Table. Can be passed as a argument and instead be written in App
 
-void dedup(unsigned char SHAkey[], int stat){
+int dedup(unsigned char SHAkey[]){
 
   unsigned char record[20][20];
  int flag=0, same=0;
- stat = 0;
   
 
   if(elements == 0 )
@@ -19,7 +18,7 @@ void dedup(unsigned char SHAkey[], int stat){
       printf("%c\n",record[i][j]);
     }
     }
-    stat = 0; // Status Signal to LZW to go ahaead with the compressed output
+    //stat = 0; // Status Signal to LZW to go ahaead with the compressed output
     elements++;
   
   }
