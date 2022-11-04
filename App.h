@@ -35,7 +35,7 @@ void run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned
 //
 // SHA 
 //
-void SHA(unsigned char Input[] ,int CHUNK, unsigned char SHAkey[]) ;
+void SHA(unsigned char Input[] ,int start,int end, unsigned char SHAkey[]) ;
 
 //
 // De-duplication
