@@ -15,22 +15,31 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
     //
     int arrayOfChunkIndices[CDC_OUTPUT_SIZE];
 
-    //
     // RUN CDC
-    //
     int chunkCount = runCDC(inputBuf, arrayOfChunkIndices, length);
 
-    //
-    // SHA table
-    //
-    build_SHA();
+    // Pointer to keep track of current position in the output buffer
+    int output_ptr = 0;
 
-    //
-    // De-Dup
-    //
+    for (int i = 0; i < chunkCount; i++) {
+        int start_index = (i == 0) ? 0 : arrayOfChunkIndices[chunkCount - 1];
+        int end_index = arrayOfChunkIndices[chunkCount];
+        // SHA table
+        unsigned char SHAkey[20];
+        SHA(inputBuf, start_index, end_index, SHAkey);
 
-    run_DeDup();
+        // De-Dup
+        int index = dedup(SHAkey);
 
-    run_LZW();
-
+        if (index == -1) {
+            // Chunk not found, run LZW and write the compressed chunk to the output
+            run_LZW(input_buf, start_index, end_index, output_buf, &output_ptr);
+        } else {
+            // Chunk found, simply write the index to the output
+            output_buf[(*output_ptr)++] = (index >> 24) & 0xFF;
+            output_buf[(*output_ptr)++] = (index >> 16) & 0xFF;
+            output_buf[(*output_ptr)++] = (index >> 8) & 0xFF;
+            output_buf[(*output_ptr)++] = index & 0xFF;
+        }
+    }
 }
