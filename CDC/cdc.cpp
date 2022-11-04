@@ -29,7 +29,7 @@ uint64_t hash_func(unsigned char *input, unsigned int pos)
 	return hashOut;
 }
 
-void cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
+int cdcInstance(unsigned char* inputBuf, unsigned int* outputBuf ,int length)
 {
 	// put your cdc implementation here
 	unsigned int i; 
@@ -47,15 +47,17 @@ void cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 
         currHash = currHash * PRIME - ((uint64_t)buff[i] * pow(PRIME, WIN_SIZE+1)) + ((uint64_t)buff[i + WIN_SIZE] * PRIME);
 	}
+
+	return chunkCount;
 }
 
-void runCDC(inputBuf, arrayOfChunkIndices, length)
+int runCDC(unsigned char* inputBuf, usigned int* arrayOfChunkIndices, int length)
 {
 
 	//
 	// Did it like this to allow for threading in the future
 	//
-	cdcInstance(inputBuf, arrayOfChunkIndices, length);
+	return(cdcInstance(inputBuf, arrayOfChunkIndices, length));
 
 	/*
 	FILE* fp = fopen(file,"r" );

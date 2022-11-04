@@ -18,7 +18,7 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
     //
     // RUN CDC
     //
-    runCDC(inputBuf, arrayOfChunkIndices, length);
+    int chunkCount = runCDC(inputBuf, arrayOfChunkIndices, length);
 
     //
     // SHA table
