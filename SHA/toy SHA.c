@@ -2,17 +2,18 @@
 #include <stdlib.h>
 #include <math.h>
 
-static int elements =0;
 void toySHA(unsigned char Input[] ,int CHUNK, unsigned char SHAkey[]) {
-
+// This function generates a 20 element hash key. Each element is 1 Byte, thus, total size of hash is 20*8*1 = 160 Bits
+   
    for(int i=0;i<20;i++)
     {
+      // This function initialises the hash key to '/'
         SHAkey[i] = '/';
- //  printf("%c\n",SHAkey[i]);
     }
 
   for(int i=0,j=0;i<CHUNK,j<20;i++,j++)
     {
+     // This function assigns a simple computation of Input to hash array 
         SHAkey[j] = (Input[i]+4)/2;
    printf("%c\n",SHAkey[j]);
     }
@@ -21,53 +22,9 @@ void toySHA(unsigned char Input[] ,int CHUNK, unsigned char SHAkey[]) {
 
 }
 
-void dedup(unsigned char SHAkey[], int stat){
-
-  unsigned char record[20][20];
- int flag=0, same=0;
- stat = 0;
-  if(elements ==0 ){
-    for(int i=0;i<1;i++){
-    for(int j=0;j<20;j++){
-      record[i][j] = SHAkey[j];
-      printf("%c\n",record[i][j]);
-  }
-}
-    stat = 1;
-    elements++;
-}
-else{
-
-  for(int i=0;i<elements;i++){
-    same=0 ;
-    flag=0;
-    for(int j=0;j<20;j++){
-      if(record[i][j] == SHAkey[j])
-      {
-        same++;
-      }
-    }
-    if(same==6)
-    {
-      stat = 1;
-      flag =1;
-    }
-  }
-
-  if(flag==0){
-    for(int j=0;j<20;j++)
-      {
-        record[elements][j] == SHAkey[j];
-      }
-  }
-
-
-}
-}
-
 void main() {
 
-  unsigned char Input[60] = "Hi I am Shantanu ";
+  unsigned char Input[60] = "Hi I am Prateek ";
   unsigned char SHAkey[20];
   int CHUNK = 60;
   int stat;
