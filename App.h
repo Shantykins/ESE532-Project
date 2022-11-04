@@ -25,7 +25,7 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length);
 //
 // CDC Function
 //
-void runCDC(unsigned char* inputBuf, unsigned char* outputBuf ,int length);
+void runCDC(unsigned char* inputBuf, unsigned int* outputBuf ,int length);
 
 
 #endif
