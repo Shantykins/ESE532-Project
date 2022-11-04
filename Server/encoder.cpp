@@ -14,6 +14,11 @@
 #include <sys/mman.h>
 #include "stopwatch.h"
 
+//
+// Include Application Header file. 
+//
+#include "../App.h"
+
 #define NUM_PACKETS 8
 #define pipe_depth 4
 #define DONE_BIT_L (1 << 7)
@@ -86,7 +91,15 @@ int main(int argc, char* argv[]) {
 
 	// we are just memcpy'ing here, but you should call your
 	// top function here.
-	memcpy(&file[offset], &buffer[HEADER], length);
+	//memcpy(&file[offset], &buffer[HEADER], length);
+
+	//
+	// OUR APP IS CALLED HERE
+	// INPUT -> buffer[2] : Since first two bytes are read above (no message body)
+	// Output -> file[offset]  : Pointer to output; offset incremented after every packet read
+	// length -> Length of each packet 
+	//
+	runApp(&buffer[HEADER], &file[offset], length);
 
 	offset += length;
 	writer++;
@@ -112,7 +125,17 @@ int main(int argc, char* argv[]) {
 		length = buffer[0] | (buffer[1] << 8);
 		length &= ~DONE_BIT_H;
 		//printf("length: %d offset %d\n",length,offset);
-		memcpy(&file[offset], &buffer[HEADER], length);
+		//memcpy(&file[offset], &buffer[HEADER], length);
+
+
+		//
+		// OUR APP IS CALLED HERE
+		// INPUT -> buffer[2] : Since first two bytes are read above (no message body)
+		// Output -> file[2]  : Pointer to output
+		// length -> Length of each packet 
+		//
+		runApp(&buffer[HEADER], &file[offset], length);
+
 
 		offset += length;
 		writer++;
