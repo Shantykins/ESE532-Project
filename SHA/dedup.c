@@ -3,7 +3,7 @@ static int elements = 0; // This has to be global variable to keep track of numb
 
 int dedup(unsigned char SHAkey[]){
 
-  unsigned char record[20][20];
+  unsigned char record[100][20];
  int flag=0, same=0;
   
 
@@ -40,9 +40,9 @@ else{
     //If all 20 element match is found, the loop is broken and index should be sent to output.
     if(same==20)
     {
-      stat = 1;// Status signal to LZW to discard compressed output and only send Index thorugh dedup
+     // stat = 1;// Status signal to LZW to discard compressed output and only send Index thorugh dedup
       flag =1;
-      break;
+      return i;
     }
   }
 
@@ -53,6 +53,7 @@ else{
         record[elements][j] == SHAkey[j];
       }
     elements++;
+    return -1;
   }
 
 
