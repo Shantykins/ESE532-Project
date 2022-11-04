@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-void toySHA(unsigned char Input[] ,int start,int end, unsigned char SHAkey[]) {
+void SHA(unsigned char Input[] ,int start,int end, unsigned char SHAkey[]) {
 // This function generates a 20 element hash key. Each element is 1 Byte, thus, total size of hash is 20*8*1 = 160 Bits
    
    for(int i=0;i<20;i++)
