@@ -13,7 +13,7 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
     // NUM_ELEMENTS + HEADER : Max size of each packet, hence max size of chunks
     // CDC_OUTPUT_SIZE TO BE MODIFIED LATER
     //
-    int arrayOfChunkIndices[CDC_OUTPUT_SIZE];
+    unsigned int arrayOfChunkIndices[CDC_OUTPUT_SIZE];
 
     // RUN CDC
     int chunkCount = runCDC(inputBuf, arrayOfChunkIndices, length);
@@ -33,13 +33,13 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 
         if (index == -1) {
             // Chunk not found, run LZW and write the compressed chunk to the output
-            run_LZW(input_buf, start_index, end_index, output_buf, &output_ptr);
+            run_LZW(inputBuf, start_index, end_index, outputBuf, &output_ptr);
         } else {
             // Chunk found, simply write the index to the output
-            output_buf[(*output_ptr)++] = (index >> 24) & 0xFF;
-            output_buf[(*output_ptr)++] = (index >> 16) & 0xFF;
-            output_buf[(*output_ptr)++] = (index >> 8) & 0xFF;
-            output_buf[(*output_ptr)++] = index & 0xFF;
+            outputBuf[(output_ptr)++] = (index >> 24) & 0xFF;
+            outputBuf[(output_ptr)++] = (index >> 16) & 0xFF;
+            outputBuf[(output_ptr)++] = (index >> 8) & 0xFF;
+            outputBuf[(output_ptr)++] = index & 0xFF;
         }
     }
 }

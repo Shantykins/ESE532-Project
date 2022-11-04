@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <iostream>
-#include "Stopwatch.h"
+//#include "Stopwatch.h"
 #include "../App.h"
 
 #define WIN_SIZE 16
@@ -11,6 +11,7 @@
 #define MODULUS 256
 #define TARGET 0
 #define NUM_THREADS 4
+
 
 uint64_t hash_func(unsigned char *input, unsigned int pos)
 {
@@ -32,8 +33,8 @@ uint64_t hash_func(unsigned char *input, unsigned int pos)
 int cdcInstance(unsigned char* inputBuf, unsigned int* outputBuf ,int length)
 {
 	// put your cdc implementation here
-	unsigned int i; 
-    uint64_t currHash = hash_func(buff, 0 + WIN_SIZE);
+	 int i; 
+    	uint64_t currHash = hash_func(inputBuf, 0 + WIN_SIZE);
 	int chunkCount = 0;
 
 	for(i = 0 + WIN_SIZE; i < length-WIN_SIZE; i++)
@@ -45,13 +46,13 @@ int cdcInstance(unsigned char* inputBuf, unsigned int* outputBuf ,int length)
 			outputBuf[chunkCount++] = i;
 		}
 
-        currHash = currHash * PRIME - ((uint64_t)buff[i] * pow(PRIME, WIN_SIZE+1)) + ((uint64_t)buff[i + WIN_SIZE] * PRIME);
+        currHash = currHash * PRIME - ((uint64_t)inputBuf[i] * pow(PRIME, WIN_SIZE+1)) + ((uint64_t)inputBuf[i + WIN_SIZE] * PRIME);
 	}
 
 	return chunkCount;
 }
 
-int runCDC(unsigned char* inputBuf, usigned int* arrayOfChunkIndices, int length)
+int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int length)
 {
 
 	//

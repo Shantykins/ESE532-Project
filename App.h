@@ -25,7 +25,22 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length);
 //
 // CDC Function
 //
-void runCDC(unsigned char* inputBuf, unsigned int* outputBuf ,int length);
+int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int length);
+
+//
+// LZW declaration
+//
+void run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int* output_ptr) ;
+
+//
+// SHA 
+//
+void SHA(unsigned char Input[] ,int CHUNK, unsigned char SHAkey[]) ;
+
+//
+// De-duplication
+//
+int dedup(unsigned char SHAkey[]);
 
 
 #endif
