@@ -71,7 +71,7 @@ int output_code (int code, unsigned char state, unsigned char output[], int* out
     return state;
 }
 
-int run_LZW (unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int output_ptr) {
+int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[], int output_ptr) {
     hash_table* dict = create_table(NUM_BUCKETS);
     int num;
     int index;
@@ -83,16 +83,16 @@ int run_LZW (unsigned char input_buf[], int start_index, int end_index, unsigned
 
     // Setup memory for string processing
     char* curr_str = (char*) malloc(sizeof(char) * MAX_CHUNK_SIZE);
-    curr_str[0] = input_buf[start_index];
+    curr_str[0] = input_chunk[0];
     curr_str[1] = '\0';
     char* temp_str = (char*) malloc(sizeof(char) * MAX_CHUNK_SIZE);
 
     unsigned char state = 0;
 
     // Compress the input chunk
-    for (index = start_index; index < end_index; index++) {
+    for (index = 0; index < chunkSize; index++) {
         char next_char[2];
-        next_char[0] = input_buf[index + 1];
+        next_char[0] = input_chunk[index + 1];
         next_char[1] = '\0';
         strcpy(temp_str, curr_str);
         strcat(temp_str, next_char);
