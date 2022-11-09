@@ -33,7 +33,7 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 
         if (index == -1) {
             // Chunk not found, run LZW and write the compressed chunk to the output
-            run_LZW(inputBuf, start_index, end_index, outputBuf, &output_ptr);
+            output_ptr = run_LZW(inputBuf, start_index, end_index, outputBuf, output_ptr);
         } else {
             // Chunk found, simply write the index to the output
             outputBuf[(output_ptr)++] = (index >> 24) & 0xFF;
