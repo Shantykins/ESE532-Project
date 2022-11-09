@@ -30,7 +30,7 @@ int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int lengt
 //
 // LZW declaration
 //
-void run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int* output_ptr) ;
+int run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int output_ptr) ;
 
 //
 // SHA 
