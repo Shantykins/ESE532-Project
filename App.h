@@ -28,17 +28,16 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length);
 //
 // CDC Function
 //
-int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int length);
-
+int  runCDC(unsigned char* inputBuf, unsigned char* outputChunk, int length);
 //
 // LZW declaration
 //
-int run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int output_ptr);
+int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[], int output_ptr);
 
 //
 // SHA 
 //
-void SHA(unsigned char Input[] ,int start,int end, unsigned char SHAkey[]) ;
+void SHA(unsigned char inputChunk[] ,int chunkSize, unsigned char SHAkey[])  ;
 
 //
 // De-duplication

@@ -6,7 +6,7 @@
 //#include "Stopwatch.h"
 #include "../App.h"
 
-#define WIN_SIZE 16
+#define WIN_SIZE 12
 #define PRIME 3
 #define MODULUS 256
 #define TARGET 0
@@ -30,35 +30,50 @@ uint64_t hash_func(unsigned char *input, unsigned int pos)
 	return hashOut;
 }
 
-int cdcInstance(unsigned char* inputBuf, unsigned int* outputBuf ,int length)
+int cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 {
 	// put your cdc implementation here
-	 int i; 
-    	uint64_t currHash = hash_func(inputBuf, 0 + WIN_SIZE);
-	int chunkCount = 0;
+	int i, chunkSize = 0; 
 
-	for(i = 0 + WIN_SIZE; i < length-WIN_SIZE; i++)
+	//
+	// Retains the last chunk index
+	//
+	static int lastChunkIdx = 0;
+
+	//
+	// Hash for first WIN_SIZE block
+	//
+    uint64_t currHash = hash_func(inputBuf, lastChunkIdx + WIN_SIZE);
+
+	for(i = lastChunkIdx + WIN_SIZE; i < length-WIN_SIZE; i++)
 	{
-		if((currHash % MODULUS) == TARGET)
+		if((currHash % MODULUS) == TARGET || chunkSize >= 8192)
 		{
 			//std::cout<<std::endl<<i<<std::endl;
 
-			outputBuf[chunkCount++] = i;
+			break;
+			
 		}
+
+		outputBuf[chunkSize++] = i;
+
+		lastChunkIdx++;
 
         currHash = currHash * PRIME - ((uint64_t)inputBuf[i] * pow(PRIME, WIN_SIZE+1)) + ((uint64_t)inputBuf[i + WIN_SIZE] * PRIME);
 	}
 
-	return chunkCount;
+	return chunkSize;
 }
 
-int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int length)
+int runCDC(unsigned char* inputBuf, unsigned char* outputChunk, int length)
 {
 
 	//
 	// Did it like this to allow for threading in the future
 	//
-	return(cdcInstance(inputBuf, arrayOfChunkIndices, length));
+	return(cdcInstance(inputBuf, outputChunk, length));
+
+}
 
 	/*
 	FILE* fp = fopen(file,"r" );
@@ -107,6 +122,6 @@ int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int lengt
 	std::cout << "Total time taken by the loop is: " << total_time.latency() << " ns." << std::endl;
 
     free(buff);
-
-	*/
 }
+	*/
+

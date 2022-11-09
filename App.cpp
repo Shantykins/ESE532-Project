@@ -8,25 +8,34 @@
 void runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length)
 {
     //
-    // This is what CDC returns. 
-    // Declared statically, since malloc adds to latency. 
-    // NUM_ELEMENTS + HEADER : Max size of each packet, hence max size of chunks
-    // CDC_OUTPUT_SIZE TO BE MODIFIED LATER
+    // Output chunk array. Max chunk size = 8k or 8192
     //
-    unsigned int arrayOfChunkIndices[CDC_OUTPUT_SIZE];
+    unsigned char outputChunk[8192];
 
-    // RUN CDC
-    int chunkCount = runCDC(inputBuf, arrayOfChunkIndices, length);
+    //
+    // Variable to keep track of chunk progress. return from function 
+    // if we cross the length
+    //
 
-    // Pointer to keep track of current position in the output buffer
-    int output_ptr = 0;
+    int packetTracker = 0;
 
-    for (int i = 0; i < chunkCount; i++) {
-        int start_index = (i == 0) ? 0 : arrayOfChunkIndices[chunkCount - 1];
-        int end_index = arrayOfChunkIndices[chunkCount];
+    while(packetTracker < length)
+    {
+
+        // RUN CDC
+        int chunksize = runCDC(inputBuf, outputChunk, length);
+
+        packetTracker += chunksize;
+
+        // Pointer to keep track of current position in the output buffer
+        int output_ptr = 0;
+
+        //for (int i = 0; i < chunkCount; i++) {
+        //int start_index = (i == 0) ? 0 : arrayOfChunkIndices[chunkCount - 1];
+        //int end_index = arrayOfChunkIndices[chunkCount];
         // SHA table
         unsigned char SHAkey[20];
-        SHA(inputBuf, start_index, end_index, SHAkey);
+        SHA(outputChunk, chunksize, SHAkey);
 
         // De-Dup
         int index = dedup(SHAkey);
@@ -35,7 +44,7 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length)
             // Chunk not found, run LZW
             unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
             int count = 0;
-            count = run_LZW(inputBuf, start_index, end_index, tempBuf, count);
+            count = run_LZW(outputChunk, chunksize, tempBuf, count);
 
             // Write the header to the output
             uint32_t header = count << 1;
@@ -57,5 +66,7 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length)
             outputBuf[(output_ptr)++] = (header >> 16) & 0xFF;
             outputBuf[(output_ptr)++] = (header >> 24) & 0xFF;
         }
+        //}
+
     }
 }
