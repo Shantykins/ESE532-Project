@@ -56,7 +56,7 @@ VPP_OPTS = --target hw
 CDC_SOURCES = CDC/cdc.cpp
 CDC_OBJECTS = cdc.o#$(CDC_SOURCES: .cpp=.o)
 
-LZW_SOURCES = LZW/lzw.cpp 
+LZW_SOURCES = LZW/lzw.cpp LZW/hashtable.cpp
 LZW_OBJECTS = LZW.o #$(LZW_SOURCES: .cpp=.o)
 
 SHA_SOURCES = SHA/dedup.cpp SHA/SHA.cpp
@@ -72,7 +72,7 @@ SERVER_SOURCES = Server/encoder.cpp Server/server.cpp $(CDC_SOURCES) $(LZW_SOURC
 SERVER_OBJECTS =$(SERVER_SOURCES:.cpp=.o) #$(CDC_OBJECTS) $(LZW_OBJECTS) $(SHA_OBJECTS) $(APP_OBJECTS)
 SERVER_EXE = encoder
 
-DECODER_SOURCES = Decoder/decoder.cpp
+DECODER_SOURCES = Decoder/Decoder.cpp
 DECODER_OBJECTS =$(DECODER_SOURCES:.cpp=.o)
 DECODER_EXE = decoder
 

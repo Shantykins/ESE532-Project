@@ -12,6 +12,9 @@
 #define CDC_OUTPUT_SIZE         NUM_ELEMENTS + HEADER
 
 
+// LZW
+#define NUM_BUCKETS 1000
+#define MAX_CHUNK_SIZE 8192
 
 //
 // Put Function Declarations Here
@@ -30,7 +33,7 @@ int runCDC(unsigned char* inputBuf, unsigned int* arrayOfChunkIndices, int lengt
 //
 // LZW declaration
 //
-int run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int output_ptr) ;
+int run_LZW(unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int output_ptr);
 
 //
 // SHA 
