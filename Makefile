@@ -56,7 +56,7 @@ VPP_OPTS = --target hw
 CDC_SOURCES = CDC/cdc.cpp
 CDC_OBJECTS = cdc.o#$(CDC_SOURCES: .cpp=.o)
 
-LZW_SOURCES = LZW/lzw.cpp 
+LZW_SOURCES = LZW/lzw.cpp LZW/hashtable.cpp
 LZW_OBJECTS = LZW.o #$(LZW_SOURCES: .cpp=.o)
 
 SHA_SOURCES = SHA/dedup.cpp SHA/SHA.cpp
