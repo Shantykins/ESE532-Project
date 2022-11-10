@@ -51,16 +51,31 @@ VPP_OPTS = --target hw
 #
 # host files
 #
+
+
+CDC_SOURCES = CDC/cdc.cpp
+CDC_OBJECTS = cdc.o#$(CDC_SOURCES: .cpp=.o)
+
+LZW_SOURCES = LZW/lzw.cpp LZW/hashtable.cpp
+LZW_OBJECTS = LZW.o #$(LZW_SOURCES: .cpp=.o)
+
+SHA_SOURCES = SHA/dedup.cpp SHA/SHA.cpp
+SHA_OBJECTS = $(SHA_CSOURCES: .cpp=.o)
+
+APP_SOURCES = App.cpp
+APP_OBJECTS = App.o #$(APP_SOURCES: .cpp=.o)
+
 CLIENT_SOURCES = Client/client.cpp
 CLIENT_EXE = client
 
-SERVER_SOURCES = Server/encoder.cpp Server/server.cpp
-SERVER_OBJECTS =$(SERVER_SOURCES:.cpp=.o)
+SERVER_SOURCES = Server/encoder.cpp Server/server.cpp $(CDC_SOURCES) $(LZW_SOURCES) $(SHA_SOURCES) $(APP_SOURCES)
+SERVER_OBJECTS =$(SERVER_SOURCES:.cpp=.o) #$(CDC_OBJECTS) $(LZW_OBJECTS) $(SHA_OBJECTS) $(APP_OBJECTS)
 SERVER_EXE = encoder
 
-DECODER_SOURCES = Decoder/Decoder.cpp
+DECODER_SOURCES = Decoder/decoder.cpp
 DECODER_OBJECTS =$(DECODER_SOURCES:.cpp=.o)
 DECODER_EXE = decoder
+
 
 # CPU_SOURCES = cpu/Host.cpp ../../common/EventTimer.cpp ../../common/Utilities.cpp
 # CPU_OBJECTS=$(CPU_SOURCES:.cpp=.o)
