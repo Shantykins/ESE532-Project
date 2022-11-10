@@ -123,6 +123,7 @@ int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[],
     return output_ptr;
 }
 
+/*
 int main(int argc, char** argv) {
     // char* input = "itty bitty bit bin";
     // unsigned char output [100];
@@ -193,3 +194,4 @@ int main(int argc, char** argv) {
 	    printf("write file with %d\n", bytes_written);
 	    fclose(outfd);
 }
+*/

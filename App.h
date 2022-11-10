@@ -2,8 +2,9 @@
 #define APP_H
 
 #include "Server/encoder.h"
-#include "Server/server.h"
+//#include "Server/server.h"
 #include "Server/stopwatch.h"
+#include <iostream>
 
 //
 // Put all Parameters here

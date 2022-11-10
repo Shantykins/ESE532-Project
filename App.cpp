@@ -1,16 +1,12 @@
-#include <iostream>
 #include "App.h"
 
-//
-// DO NOT COMPILE. WILL NOT WORK.
-//
 
 void runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length)
 {
     //
     // Output chunk array. Max chunk size = 8k or 8192
     //
-    unsigned char outputChunk[8192];
+    unsigned char outputChunk[MAX_CHUNK_SIZE];
 
     //
     // Variable to keep track of chunk progress. return from function 

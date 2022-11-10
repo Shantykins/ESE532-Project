@@ -43,19 +43,23 @@ int cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 	//
 	// Hash for first WIN_SIZE block
 	//
-    uint64_t currHash = hash_func(inputBuf, lastChunkIdx + WIN_SIZE);
-
-	for(i = lastChunkIdx + WIN_SIZE; i < length-WIN_SIZE; i++)
+    uint64_t currHash = hash_func(inputBuf, lastChunkIdx);
+				
+	for(i = lastChunkIdx; i < lastChunkIdx + WIN_SIZE; i++)
 	{
-		if((currHash % MODULUS) == TARGET || chunkSize >= 8192)
-		{
-			//std::cout<<std::endl<<i<<std::endl;
+		outputBuf[chunkSize++] = inputBuf[i];
+	}
 
-			break;
-			
+	lastChunkIdx = lastChunkIdx + WIN_SIZE;
+
+	for(i = lastChunkIdx; i < length-WIN_SIZE ; i++)
+	{
+		if((currHash % MODULUS) == TARGET || chunkSize >= MAX_CHUNK_SIZE)
+		{
+			break;			
 		}
 
-		outputBuf[chunkSize++] = i;
+		outputBuf[chunkSize++] = inputBuf[i];
 
 		lastChunkIdx++;
 
