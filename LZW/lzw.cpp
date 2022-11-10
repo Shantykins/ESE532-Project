@@ -71,7 +71,7 @@ int output_code (int code, unsigned char state, unsigned char output[], int* out
     return state;
 }
 
-int run_LZW (unsigned char input_buf[], int start_index, int end_index, unsigned char output[], int output_ptr) {
+int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[], int output_ptr) {
     hash_table* dict = create_table(NUM_BUCKETS);
     int num;
     int index;
@@ -82,17 +82,18 @@ int run_LZW (unsigned char input_buf[], int start_index, int end_index, unsigned
     }
 
     // Setup memory for string processing
-    char* curr_str = (char*) malloc(sizeof(char) * MAX_CHUNK_SIZE);
-    curr_str[0] = input_buf[start_index];
+    char* curr_str = (char*) malloc(sizeof(char) * chunkSize);
+
+    curr_str[0] = input_chunk[0];
     curr_str[1] = '\0';
-    char* temp_str = (char*) malloc(sizeof(char) * MAX_CHUNK_SIZE);
+    char* temp_str = (char*) malloc(sizeof(char) * chunkSize);
 
     unsigned char state = 0;
 
     // Compress the input chunk
-    for (index = start_index; index < end_index; index++) {
+    for (index = 0; index < chunkSize - 1; index++) {
         char next_char[2];
-        next_char[0] = input_buf[index + 1];
+        next_char[0] = input_chunk[index + 1];
         next_char[1] = '\0';
         strcpy(temp_str, curr_str);
         strcat(temp_str, next_char);
@@ -115,77 +116,82 @@ int run_LZW (unsigned char input_buf[], int start_index, int end_index, unsigned
         output_code(code, state, output, &output_ptr);
     }
     
+    // Clean up allocated memory
+    free(curr_str);
+    free(temp_str);
+    delete_table(dict);
+    return output_ptr;
 }
 
-// int main(int argc, char** argv) {
-// //     char* input = "itty bitty bit bin";
-// //     unsigned char output [100];
-// //     int output_ptr = 0;
-// //     output_ptr = run_LZW((unsigned char*) input, 0, 18, output, output_ptr);
-// //     printf("%d\n", output_ptr);
-// //     int i;
-// //     for (i = 0; i < output_ptr; i++) {
-// //         printf("0x%.2X\n", output[i]);
-// //     }
-//     FILE* fp = fopen("../LittlePrince.txt", "r");
-// 	if (fp == NULL) {
-// 		perror("invalid file");
-// 		exit(EXIT_FAILURE);
-// 	}
+/*
+int main(int argc, char** argv) {
+    // char* input = "itty bitty bit bin";
+    // unsigned char output [100];
+    // int output_ptr = 0;
+    // output_ptr = run_LZW((unsigned char*) input, 18, output, output_ptr);
+    // printf("%d\n", output_ptr);
+    // int i;
+    // for (i = 0; i < output_ptr; i++) {
+    //     printf("0x%.2X\n", output[i]);
+    // }
+    FILE* fp = fopen("../LittlePrince.txt", "r");
+	if (fp == NULL) {
+		perror("invalid file");
+		exit(EXIT_FAILURE);
+	}
 
-// 	//
-// 	fseek(fp, 0, SEEK_END); // seek to end of file
-// 	int file_size = ftell(fp); // get current file pointer
-// 	fseek(fp, 0, SEEK_SET); // seek back to beginning of file
+	//
+	fseek(fp, 0, SEEK_END); // seek to end of file
+	int file_size = ftell(fp); // get current file pointer
+	fseek(fp, 0, SEEK_SET); // seek back to beginning of file
 
-// 	//
-// 	unsigned char* buff = (unsigned char*) (malloc(
-// 			sizeof(unsigned char) * file_size));
-// 	if (buff == NULL) {
-// 		perror("not enough space");
-// 		fclose(fp);
-// 		exit(EXIT_FAILURE);
-// 	}
+	//
+	unsigned char* buff = (unsigned char*) (malloc(
+			sizeof(unsigned char) * file_size));
+	if (buff == NULL) {
+		perror("not enough space");
+		fclose(fp);
+		exit(EXIT_FAILURE);
+	}
 
-// 	//
-// 	int bytes_read = fread(&buff[0], sizeof(unsigned char), file_size, fp);
-// 	printf("bytes_read %d\n", bytes_read);
+	//
+	int bytes_read = fread(&buff[0], sizeof(unsigned char), file_size, fp);
+	printf("bytes_read %d\n", bytes_read);
 
-//         unsigned char* input = buff;
-//         unsigned char* outputBuf = (unsigned char*) (malloc(sizeof(unsigned char) * file_size));
-//         int output_ptr = 0;
-//         int start_index = 0;
-//         int end_index = file_size;
-//         int index = -1;
+        unsigned char* input = buff;
+        unsigned char* outputBuf = (unsigned char*) (malloc(sizeof(unsigned char) * file_size));
+        int output_ptr = 0;
+        int index = -1;
 
-//         if (index == -1) {
-//             // Chunk not found, run LZW
-//             unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
-//             int count = 0;
-//             count = run_LZW((unsigned char*) input, start_index, end_index, tempBuf, count);
+        if (index == -1) {
+            // Chunk not found, run LZW
+            unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
+            int count = 0;
+            count = run_LZW((unsigned char*) input, file_size, tempBuf, count);
 
-//             // Write the header to the output
-//             uint32_t header = count << 1;
-//             outputBuf[(output_ptr)++] = header & 0xFF;
-//             outputBuf[(output_ptr)++] = (header >> 8) & 0xFF;
-//             outputBuf[(output_ptr)++] = (header >> 16) & 0xFF;
-//             outputBuf[(output_ptr)++] = (header >> 24) & 0xFF;
+            // Write the header to the output
+            uint32_t header = count << 1;
+            outputBuf[(output_ptr)++] = header & 0xFF;
+            outputBuf[(output_ptr)++] = (header >> 8) & 0xFF;
+            outputBuf[(output_ptr)++] = (header >> 16) & 0xFF;
+            outputBuf[(output_ptr)++] = (header >> 24) & 0xFF;
 
-//             // Write the compressed chunk to the output
-//             for (int i = 0; i < count; i++) {
-//                 outputBuf[(output_ptr)++] = tempBuf[i];
-//             }
-//         } else {
-//             // Chunk found, simply write the index to the output in the header
-//             uint32_t header = index << 1;
-//             header = header | 1;
-//             outputBuf[(output_ptr)++] = header & 0xFF;
-//             outputBuf[(output_ptr)++] = (header >> 8) & 0xFF;
-//             outputBuf[(output_ptr)++] = (header >> 16) & 0xFF;
-//             outputBuf[(output_ptr)++] = (header >> 24) & 0xFF;
-//         }
-//         FILE *outfd = fopen("output_cpu.bin", "wb");
-// 	    int bytes_written = fwrite(outputBuf, 1, output_ptr, outfd);
-// 	    printf("write file with %d\n", bytes_written);
-// 	    fclose(outfd);
-// }
+            // Write the compressed chunk to the output
+            for (int i = 0; i < count; i++) {
+                outputBuf[(output_ptr)++] = tempBuf[i];
+            }
+        } else {
+            // Chunk found, simply write the index to the output in the header
+            uint32_t header = index << 1;
+            header = header | 1;
+            outputBuf[(output_ptr)++] = header & 0xFF;
+            outputBuf[(output_ptr)++] = (header >> 8) & 0xFF;
+            outputBuf[(output_ptr)++] = (header >> 16) & 0xFF;
+            outputBuf[(output_ptr)++] = (header >> 24) & 0xFF;
+        }
+        FILE *outfd = fopen("output_cpu.bin", "wb");
+	    int bytes_written = fwrite(outputBuf, 1, output_ptr, outfd);
+	    printf("write file with %d\n", bytes_written);
+	    fclose(outfd);
+}
+*/
