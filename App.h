@@ -5,7 +5,12 @@
 //#include "Server/server.h"
 #include "Server/stopwatch.h"
 #include <iostream>
-
+#include <unordered_map>
+#include<string.h>
+#include<stdio.h>
+#include <stdlib.h>
+#include <wolfssl/options.h>
+#include <wolfssl/wolfcrypt/sha.h>
 //
 // Put all Parameters here
 //
@@ -38,12 +43,12 @@ int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[],
 //
 // SHA 
 //
-void SHA(unsigned char inputChunk[] ,int chunkSize, unsigned char SHAkey[])  ;
+void SHA_new(char* message, char* digest);
 
 //
 // De-duplication
 //
-int dedup(unsigned char SHAkey[]);
+int dedup_hash(char shaSum[],std::unordered_map<std::string, int> &shaMap, int curr);
 
 
 #endif
