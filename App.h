@@ -10,7 +10,8 @@
 #include<stdio.h>
 #include <stdlib.h>
 #include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/sha.h>
+#include <wolfssl/wolfcrypt/sha256.h>
+#include <vector>
 //
 // Put all Parameters here
 //
@@ -22,6 +23,17 @@
 #define NUM_BUCKETS 1000
 #define MAX_CHUNK_SIZE 8192
 
+struct VectorHasher {
+    std::size_t operator()(const std::vector<char>& a) const {
+        std::size_t h = 0;
+
+        for (auto e : a) {
+            h ^= std::hash<int>{}(e)  + 0x9e3779b9 + (h << 6) + (h >> 2); 
+        }
+        return h;
+    }   
+};
+
 //
 // Put Function Declarations Here
 //
@@ -29,12 +41,12 @@
 //
 // Main Application
 //
-void runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length);
+int runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length, int* runtime, int* bytes_dropped);
 
 //
 // CDC Function
 //
-int  runCDC(unsigned char* inputBuf, unsigned char* outputChunk, int length);
+int  runCDC(unsigned char* inputBuf, unsigned char* outputChunk, int length, int* last_chunk_idx);
 //
 // LZW declaration
 //
@@ -48,7 +60,7 @@ void SHA_new(char* message, char* digest);
 //
 // De-duplication
 //
-int dedup_hash(char shaSum[],std::unordered_map<std::string, int> &shaMap, int curr);
+int dedup_hash(char shaSum[],std::unordered_map<std::vector<char>, int, VectorHasher> &shaMap, int curr);
 
 
 #endif
