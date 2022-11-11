@@ -1,7 +1,7 @@
 #include<stdlib.h>
 #include<stdio.h>
-#include "dedup_hash.cpp"
-#include "SHA3-384_fpga.cpp"
+//#include "dedup_hash.cpp"
+//#include "SHA3-384_fpga.cpp"
 #include<iostream>
 #include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/sha3.h>

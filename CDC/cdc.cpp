@@ -30,29 +30,31 @@ uint64_t hash_func(unsigned char *input, unsigned int pos)
 	return hashOut;
 }
 
-int cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
+int cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length, int* lastChunkIdx)
 {
 	// put your cdc implementation here
 	int i, chunkSize = 0; 
 
-	//
-	// Retains the last chunk index
-	//
-	static int lastChunkIdx = 0;
+	// //
+	// // Retains the last chunk index
+	// //
+	// static int lastChunkIdx = 0;
 
 	//
 	// Hash for first WIN_SIZE block
 	//
-    uint64_t currHash = hash_func(inputBuf, lastChunkIdx);
+    uint64_t currHash = hash_func(inputBuf, *lastChunkIdx);
 				
-	for(i = lastChunkIdx; i < lastChunkIdx + WIN_SIZE; i++)
+	for(i = *lastChunkIdx; i < *lastChunkIdx + WIN_SIZE; i++)
 	{
 		outputBuf[chunkSize++] = inputBuf[i];
 	}
 
-	lastChunkIdx = lastChunkIdx + WIN_SIZE;
+	*lastChunkIdx = *lastChunkIdx + WIN_SIZE;
 
-	for(i = lastChunkIdx; i < length-WIN_SIZE ; i++)
+	static unsigned long p = pow(PRIME, WIN_SIZE+1);
+
+	for(i = *lastChunkIdx; i < length-WIN_SIZE ; i++)
 	{
 		if((currHash % MODULUS) == TARGET || chunkSize >= MAX_CHUNK_SIZE)
 		{
@@ -61,21 +63,22 @@ int cdcInstance(unsigned char* inputBuf, unsigned char* outputBuf ,int length)
 
 		outputBuf[chunkSize++] = inputBuf[i];
 
-		lastChunkIdx++;
+		(*lastChunkIdx)++;
 
-        currHash = currHash * PRIME - ((uint64_t)inputBuf[i] * pow(PRIME, WIN_SIZE+1)) + ((uint64_t)inputBuf[i + WIN_SIZE] * PRIME);
+        currHash = currHash * PRIME - ((uint64_t)inputBuf[i] * p) + ((uint64_t)inputBuf[i + WIN_SIZE] * PRIME);
 	}
 
+	outputBuf[chunkSize++] = '\0';
 	return chunkSize;
 }
 
-int runCDC(unsigned char* inputBuf, unsigned char* outputChunk, int length)
+int runCDC(unsigned char* inputBuf, unsigned char* outputChunk, int length, int* last_chunk_idx)
 {
 
 	//
 	// Did it like this to allow for threading in the future
 	//
-	return(cdcInstance(inputBuf, outputChunk, length));
+	return(cdcInstance(inputBuf, outputChunk, length, last_chunk_idx));
 
 }
 
