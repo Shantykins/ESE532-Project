@@ -59,7 +59,7 @@ CDC_OBJECTS = cdc.o#$(CDC_SOURCES: .cpp=.o)
 LZW_SOURCES = LZW/lzw.cpp LZW/hashtable.cpp
 LZW_OBJECTS = LZW.o #$(LZW_SOURCES: .cpp=.o)
 
-SHA_SOURCES = SHA/dedup.cpp SHA/SHA.cpp
+SHA_SOURCES = SHA/dedup_hash.cpp SHA/SHA3-384_fpga.cpp
 SHA_OBJECTS = $(SHA_CSOURCES: .cpp=.o)
 
 APP_SOURCES = App.cpp

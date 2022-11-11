@@ -12,9 +12,10 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length)
     // Variable to keep track of chunk progress. return from function 
     // if we cross the length
     //
-
+    char digest[SHA_DIGEST_SIZE];
     int packetTracker = 0;
-
+    std::unordered_map<std::string, int> shaMap;
+    int curr=0; 
     while(packetTracker < length)
     {
 
@@ -30,14 +31,15 @@ void runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length)
         //int start_index = (i == 0) ? 0 : arrayOfChunkIndices[chunkCount - 1];
         //int end_index = arrayOfChunkIndices[chunkCount];
         // SHA table
-        unsigned char SHAkey[20];
-        SHA(outputChunk, chunksize, SHAkey);
+       // SHA(outputChunk, chunksize, SHAkey);
+        SHA_new(outputChunk,digest);
 
         // De-Dup
-        int index = dedup(SHAkey);
+        int index = dedup_hash(digest,shaMap,curr);
 
         if (index == -1) {
             // Chunk not found, run LZW
+            curr++;
             unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
             int count = 0;
             count = run_LZW(outputChunk, chunksize, tempBuf, count);
