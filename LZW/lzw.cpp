@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "hashtable.h"
-#include "../App.h"
+//#include "../App.h"
+#define NUM_BUCKETS 1000
+#define MAX_CHUNK_SIZE 8192
 
 int output_code (int code, unsigned char state, unsigned char output[], int* output_ptr) {
     code = code & 0x1FFF;
@@ -64,9 +66,6 @@ int output_code (int code, unsigned char state, unsigned char output[], int* out
             output[(*output_ptr)++] = (unsigned char) (code & 0xFF);
             state = 0;
             break;
-        default:
-            printf("ERROR IN STATE\n");
-            return -1;
     }
     return state;
 }
@@ -115,6 +114,8 @@ int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[],
         int code = get(dict, curr_str);
         output_code(code, state, output, &output_ptr);
     }
+
+    printf("Num: %d\n", num);
     
     // Clean up allocated memory
     free(curr_str);
@@ -123,7 +124,7 @@ int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[],
     return output_ptr;
 }
 
-/*
+
 int main(int argc, char** argv) {
     // char* input = "itty bitty bit bin";
     // unsigned char output [100];
@@ -134,7 +135,7 @@ int main(int argc, char** argv) {
     // for (i = 0; i < output_ptr; i++) {
     //     printf("0x%.2X\n", output[i]);
     // }
-    FILE* fp = fopen("../LittlePrince.txt", "r");
+    FILE* fp = fopen("../test.txt", "r");
 	if (fp == NULL) {
 		perror("invalid file");
 		exit(EXIT_FAILURE);
@@ -194,4 +195,3 @@ int main(int argc, char** argv) {
 	    printf("write file with %d\n", bytes_written);
 	    fclose(outfd);
 }
-*/
