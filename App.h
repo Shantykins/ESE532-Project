@@ -12,6 +12,13 @@
 #include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/sha256.h>
 #include <vector>
+
+#include <CL/cl2.hpp>
+#include <cstdint>
+#include <cstdlib>
+#include <fstream>
+#include <unistd.h>
+
 //
 // Put all Parameters here
 //
