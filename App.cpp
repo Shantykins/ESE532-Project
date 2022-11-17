@@ -2,10 +2,50 @@
 
 int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* runtime, int* bytes_dropped)
 { 
+    
+    //======================================================================================================================
     //
-    // Output chunk array. Max chunk size = 8k or 8192
+    // OPENCL INITIALIZATION
+    //    
+
+    EventTimer timer1, timer2;
+
+    // ------------------------------------------------------------------------------------
+    // Step 1: Initialize the OpenCL environment
+     // ------------------------------------------------------------------------------------
+
+    cl_int err;
+    std::string binaryFile = BINARY_FILE;
+    unsigned fileBufSize;
+    std::vector<cl::Device> devices = get_xilinx_devices();
+    devices.resize(1);
+    cl::Device device = devices[0];
+    cl::Context context(device, NULL, NULL, NULL, &err);
+    char *fileBuf = read_binary_file(binaryFile, fileBufSize);
+    cl::Program::Binaries bins{{fileBuf, fileBufSize}};
+    cl::Program program(context, devices, bins, NULL, &err);
+
+    cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE, &err); 
+    cl::Kernel kernel_lzw(program, "lzw_hw", &err);
+
+    std::vector<cl::Event> write_event(1);
+    std::vector<cl::Event> compute_event(1);
+    std::vector<cl::Event> done_event(1);
+
+
+    in_buf = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * MAX_CHUNK_SIZE, NULL, &err);
+    out_buf = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13, NULL, &err);
+
+    unsigned char* outputChunk = (unsigned char *)q.enqueueMapBuffer(in_buf, CL_TRUE, CL_MAP_WRITE, 
+                                                        0, sizeof(unsigned char)*MAX_CHUNK_SIZE);
+    unsigned char* tempbuf = (unsigned char *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_READ, 
+                                                        0, sizeof(unsigned char)*(MAX_CHUNK_SIZE / 8) * 13);
+
+
     //
-    unsigned char outputChunk[MAX_CHUNK_SIZE];
+    //============================================================================================================================
+    //
+
 
     //
     // Variable to keep track of chunk progress. return from function 
@@ -37,11 +77,6 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
 
         packetTracker += chunksize - 1;
 
-        //for (int i = 0; i < chunkCount; i++) {
-        //int start_index = (i == 0) ? 0 : arrayOfChunkIndices[chunkCount - 1];
-        //int end_index = arrayOfChunkIndices[chunkCount];
-        // SHA table
-        // SHA(outputChunk, chunksize, SHAkey);
         time_sha.start();
         SHA_new((char *) outputChunk,digest);
         time_sha.stop();
@@ -55,11 +90,27 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
         if (index == -1) {
             // Chunk not found, run LZW
             curr++;
-            unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
             int count = 0;
+            //unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
+
             time_lzw.start();
-            count = run_LZW(outputChunk, chunksize, tempBuf, count);
+            
+            kernel_lzw.setArg(0, in_buf);
+            kernel_lzw.setArg(1, chunksize);
+            kernel_lzw.setArg(2, out_buf);
+
+            //count = run_LZW(outputChunk, chunksize, tempBuf, count);
+
+            q.enqueueMigrateMemObjects({in_buf}, 0 /* 0 means from host*/, NULL, &write_event[0]);
+            q.enqueueTask(LZW_HW_KER, &write_event, &compute_event[0]);
+            q.enqueueMigrateMemObjects({out_buf}, CL_MIGRATE_MEM_OBJECT_HOST, &compute_event, &done_event[0]);
+            clWaitForEvents(1, (const cl_event *)&done_event[0]);
+
             time_lzw.stop();
+
+            int count = (tempBuf[3] << 24) | (tempBuf[2] << 16) | (tempBuf[1] << 8) | tempbuf[0]);
+
+
 
             // Write the header to the output
             uint32_t header = count << 1;
@@ -85,6 +136,9 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
         //}
         total_time.stop();
     }
+
+    q.finish();
+    delete[] fileBuf;
 
     std::cout << "Total latency of CDC is: " << time_cdc.latency() << " ms." << std::endl;
     std::cout << "Total latency of SHA is: " << time_sha.latency() << " ms." << std::endl;
