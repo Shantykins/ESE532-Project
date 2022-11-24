@@ -1,6 +1,6 @@
 #include "App.h"
 
-int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* runtime, int* bytes_dropped)
+int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float* runtime, int* bytes_dropped, float* kernel_time, float* non_lzw)
 { 
     
     //======================================================================================================================
@@ -8,14 +8,12 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     // OPENCL INITIALIZATION
     //    
 
-    EventTimer timer1, timer2;
-
     // ------------------------------------------------------------------------------------
     // Step 1: Initialize the OpenCL environment
      // ------------------------------------------------------------------------------------
 
     cl_int err;
-    std::string binaryFile = BINARY_FILE;
+    std::string binaryFile = "encoder.xclbin";
     unsigned fileBufSize;
     std::vector<cl::Device> devices = get_xilinx_devices();
     devices.resize(1);
@@ -26,21 +24,20 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     cl::Program program(context, devices, bins, NULL, &err);
 
     cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE, &err); 
-    cl::Kernel kernel_lzw(program, "lzw_hw", &err);
+    cl::Kernel kernel_lzw(program, "lzw_hw_streams", &err);
 
     std::vector<cl::Event> write_event(1);
     std::vector<cl::Event> compute_event(1);
     std::vector<cl::Event> done_event(1);
 
 
-    in_buf = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * MAX_CHUNK_SIZE, NULL, &err);
-    out_buf = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13, NULL, &err);
+    cl::Buffer in_buf = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * MAX_CHUNK_SIZE, NULL, &err);
+    cl::Buffer out_buf = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13, NULL, &err);
 
     unsigned char* outputChunk = (unsigned char *)q.enqueueMapBuffer(in_buf, CL_TRUE, CL_MAP_WRITE, 
                                                         0, sizeof(unsigned char)*MAX_CHUNK_SIZE);
     unsigned char* tempbuf = (unsigned char *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_READ, 
                                                         0, sizeof(unsigned char)*(MAX_CHUNK_SIZE / 8) * 13);
-
 
     //
     //============================================================================================================================
@@ -67,6 +64,10 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     // Pointer to keep track of current position in the output buffer
     int output_ptr = 0;
 
+    // Variables to store OpenCL profiling info
+    unsigned long start, stop;
+    unsigned long total_kernel_execution_time = 0;
+
     while(packetTracker < length)
     {
         total_time.start();
@@ -90,7 +91,7 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
         if (index == -1) {
             // Chunk not found, run LZW
             curr++;
-            int count = 0;
+
             //unsigned char* tempBuf = (unsigned char*) malloc(sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13);
 
             time_lzw.start();
@@ -102,15 +103,17 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
             //count = run_LZW(outputChunk, chunksize, tempBuf, count);
 
             q.enqueueMigrateMemObjects({in_buf}, 0 /* 0 means from host*/, NULL, &write_event[0]);
-            q.enqueueTask(LZW_HW_KER, &write_event, &compute_event[0]);
+            q.enqueueTask(kernel_lzw, &write_event, &compute_event[0]);
             q.enqueueMigrateMemObjects({out_buf}, CL_MIGRATE_MEM_OBJECT_HOST, &compute_event, &done_event[0]);
             clWaitForEvents(1, (const cl_event *)&done_event[0]);
-
             time_lzw.stop();
 
-            int count = (tempBuf[3] << 24) | (tempBuf[2] << 16) | (tempBuf[1] << 8) | tempbuf[0]);
+            compute_event[0].getProfilingInfo<unsigned long>(CL_PROFILING_COMMAND_START, &start);
+            compute_event[0].getProfilingInfo<unsigned long>(CL_PROFILING_COMMAND_END, &stop);
 
+            total_kernel_execution_time += (stop - start);
 
+            int count = (tempbuf[3] << 24) | (tempbuf[2] << 16) | (tempbuf[1] << 8) | tempbuf[0];
 
             // Write the header to the output
             uint32_t header = count << 1;
@@ -121,7 +124,7 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
 
             // Write the compressed chunk to the output
             for (int i = 0; i < count; i++) {
-                outputBuf[(output_ptr)++] = tempBuf[i];
+                outputBuf[(output_ptr)++] = tempbuf[i + 4];
             }
         } else {
             *bytes_dropped += (chunksize - 1) - 4;
@@ -151,6 +154,9 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     std::cout << "Average latency of Dedup per loop iteration is: " << time_dedup.avg_latency() << " ms." << std::endl;
     std::cout << "Average latency of LZW per loop iteration is: " << time_lzw.avg_latency() << " ms." << std::endl;
     std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ms." << std::endl;
+    std::cout << "Total Kernel Execution Time: " << total_kernel_execution_time / 1000000 << " ms." << std::endl;
     *runtime += total_time.latency();
+    *kernel_time += total_kernel_execution_time;
+    *non_lzw += time_cdc.latency() + time_sha.latency() + time_dedup.latency();
     return output_ptr;
 }
