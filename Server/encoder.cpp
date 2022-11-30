@@ -1,23 +1,23 @@
-#include "encoder.h"
+#include "Server/encoder.h"
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <iostream>
-#include "server.h"
+#include "Server/server.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include "stopwatch.h"
+#include "Server/stopwatch.h"
 
 //
 // Include Application Header file. 
 //
-#include "../App.h"
+#include "App.h"
 
 #define NUM_PACKETS 8
 #define pipe_depth 4
@@ -138,7 +138,7 @@ int main(int argc, char* argv[]) {
 		length = buffer[0] | (buffer[1] << 8);
 		length &= ~DONE_BIT_H;
 		total_length += length;
-		//printf("length: %d offset %d\n",length,offset);
+		//printf("total length: %d offset %d\n",total_length,offset);
 		//memcpy(&file[offset], &buffer[HEADER], length);
 
 
