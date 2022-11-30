@@ -1,30 +1,38 @@
 #ifndef APP_H
 #define APP_H
 
+#define CL_HPP_CL_1_2_DEFAULT_BUILD
+#define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+#define CL_HPP_ENABLE_PROGRAM_CONSTRUCTION_FROM_ARRAY_COMPATIBILITY 1
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+
 #include "Server/encoder.h"
 //#include "Server/server.h"
 #include "Server/stopwatch.h"
 #include <iostream>
 #include <unordered_map>
-#include<string.h>
-#include<stdio.h>
+#include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <wolfssl/options.h>
 #include <wolfssl/wolfcrypt/sha256.h>
 #include <vector>
-
 #include <CL/cl2.hpp>
+#include <fstream>
+#include <string>
 #include <cstdint>
 #include <cstdlib>
-#include <fstream>
+#include <iostream>
 #include <unistd.h>
+#include "Utilities.h"
 
 //
 // Put all Parameters here
 //
 
 #define CDC_OUTPUT_SIZE         NUM_ELEMENTS + HEADER
-
+#define LZW_HW_KER
 
 // LZW
 #define NUM_BUCKETS 1000
