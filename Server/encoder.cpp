@@ -54,8 +54,10 @@ int main(int argc, char* argv[]) {
 	int count = 0;
 	int total_length = 0;
 	ESE532_Server server;
-	int runtime = 0;
+	float runtime = 0;
 	int bytes_dropped = 0;
+	float kernel_time = 0;
+	float non_lzw = 0;
 
 	if (argc != 2) {
 		printf("Usage: ./encoder <output_filename>\n");
@@ -110,7 +112,7 @@ int main(int argc, char* argv[]) {
 	// Output -> file[offset]  : Pointer to output; offset incremented after every packet read
 	// length -> Length of each packet 
 	//
-	int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped);
+	int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, &kernel_time, &non_lzw);
 
 	offset += output_ptr;
 	writer++;
@@ -146,7 +148,7 @@ int main(int argc, char* argv[]) {
 		// Output -> file[2]  : Pointer to output
 		// length -> Length of each packet 
 		//
-		int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped);
+		int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, &kernel_time, &non_lzw);
 
 		offset += output_ptr;
 		writer++;
@@ -178,6 +180,11 @@ int main(int argc, char* argv[]) {
 	float total_mbps2 = (total_megabits / runtime) * 1000;
 	std::cout << "Throughput of Application (just App.cpp): " << total_mbps2 << " Mb/s" << std::endl;
 	std::cout << "Bytes dropped by Dedup: " << bytes_dropped << " B" << std::endl;
+	float kernel_time_ms = kernel_time / 1000000.0f;
+	std::cout << "Total Non-LZW Time: " << non_lzw << " ms" << std::endl;
+	std::cout << "Throughput of Application (no LZW): " << (total_megabits / non_lzw) * 1000 << " Mb/s" << std::endl;
+	std::cout << "Total Kernel Time: " << kernel_time_ms << " ms" << std::endl;
+	std::cout << "Kernel Bandwidth: " << (total_megabits / kernel_time_ms) * 1000 << "Mb/s" << std::endl;
 
 	return 0;
 }

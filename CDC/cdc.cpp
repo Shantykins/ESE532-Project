@@ -8,7 +8,7 @@
 
 #define WIN_SIZE 12
 #define PRIME 3
-#define MODULUS 256
+#define MODULUS 4096
 #define TARGET 0
 #define NUM_THREADS 4
 
