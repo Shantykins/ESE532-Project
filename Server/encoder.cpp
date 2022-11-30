@@ -24,6 +24,12 @@
 #define DONE_BIT_L (1 << 7)
 #define DONE_BIT_H (1 << 15)
 
+#define CL_HPP_CL_1_2_DEFAULT_BUILD
+#define CL_HPP_TARGET_OPENCL_VERSION 120
+#define CL_HPP_MINIMUM_OPENCL_VERSION 120
+#define CL_HPP_ENABLE_PROGRAM_CONSTRUCTION_FROM_ARRAY_COMPATIBILITY 1
+#define CL_USE_DEPRECATED_OPENCL_1_2_APIS
+
 int offset = 0;
 unsigned char* file;
 
@@ -120,7 +126,7 @@ int main(int argc, char* argv[]) {
     //======================================================================================================================    
 
     cl_int err;
-    std::string binaryFile = BINARY_FILE;
+    std::string binaryFile = "encoder.xclbin";
     unsigned fileBufSize;
     std::vector<cl::Device> devices = get_xilinx_devices();
     devices.resize(1);
