@@ -44,6 +44,8 @@ void handle_input(int argc, char* argv[], int* blocksize) {
 	}
 }
 
+
+
 int main(int argc, char* argv[]) {
 	stopwatch ethernet_timer;
 	stopwatch total_timer;
@@ -110,7 +112,47 @@ int main(int argc, char* argv[]) {
 	// Output -> file[offset]  : Pointer to output; offset incremented after every packet read
 	// length -> Length of each packet 
 	//
-	int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped);
+
+    
+    //======================================================================================================================
+    //
+    // OPENCL INITIALIZATION
+    //======================================================================================================================    
+
+    cl_int err;
+    std::string binaryFile = BINARY_FILE;
+    unsigned fileBufSize;
+    std::vector<cl::Device> devices = get_xilinx_devices();
+    devices.resize(1);
+    cl::Device device = devices[0];
+    cl::Context context(device, NULL, NULL, NULL, &err);
+    char *fileBuf = read_binary_file(binaryFile, fileBufSize);
+    cl::Program::Binaries bins{{fileBuf, fileBufSize}};
+    cl::Program program(context, devices, bins, NULL, &err);
+
+    cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE, &err); 
+    cl::Kernel kernel_lzw(program, "lzw_hw", &err);
+
+    std::vector<cl::Event> write_event(1);
+    std::vector<cl::Event> compute_event(1);
+    std::vector<cl::Event> done_event(1);
+
+
+    in_buf = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * MAX_CHUNK_SIZE, NULL, &err);
+    out_buf = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13, NULL, &err);
+
+    unsigned char* outputChunk = (unsigned char *)q.enqueueMapBuffer(in_buf, CL_TRUE, CL_MAP_WRITE, 
+                                                        0, sizeof(unsigned char)*MAX_CHUNK_SIZE);
+    unsigned char* tempbuf = (unsigned char *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_READ, 
+                                                        0, sizeof(unsigned char)*(MAX_CHUNK_SIZE / 8) * 13);
+
+    //======================================================================================================================
+    //
+    // OPENCL INITIALIZATION ENDS
+    //======================================================================================================================   
+
+	int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, 
+							q, kernel_lzw, in_buf, out_buf, outputChunk, tempbuf);
 
 	offset += output_ptr;
 	writer++;
@@ -146,7 +188,8 @@ int main(int argc, char* argv[]) {
 		// Output -> file[2]  : Pointer to output
 		// length -> Length of each packet 
 		//
-		int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped);
+		int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, 
+							q, kernel_lzw, in_buf, out_buf, outputChunk, tempbuf);
 
 		offset += output_ptr;
 		writer++;

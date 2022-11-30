@@ -48,7 +48,9 @@ struct VectorHasher {
 //
 // Main Application
 //
-int runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length, int* runtime, int* bytes_dropped);
+int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* runtime, int* bytes_dropped,
+        cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
+        unsigned char* tempbuf);
 
 //
 // CDC Function
