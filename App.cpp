@@ -22,6 +22,10 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     stopwatch time_lzw;
     stopwatch total_time;
 
+    std::vector<cl::Event> write_event(1);
+    std::vector<cl::Event> compute_event(1);
+    std::vector<cl::Event> done_event(1);
+
     // Pointer to keep track of current position in the output buffer
     int output_ptr = 0;
 
