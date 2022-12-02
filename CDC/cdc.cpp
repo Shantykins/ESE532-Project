@@ -8,7 +8,7 @@
 #define WIN_SIZE 12
 #define PRIME 3
 #define MODULUS 4096
-#define TARGET 0
+#define TARGET 1
 
 //
 // Assume prime = 3
