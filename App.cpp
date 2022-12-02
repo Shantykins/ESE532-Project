@@ -1,48 +1,13 @@
 #include "App.h"
 
-int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float* runtime, int* bytes_dropped, float* kernel_time, float* non_lzw)
+int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float* runtime, int* bytes_dropped, float* kernel_time, 
+        float* non_lzw, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
+        unsigned char* tempbuf)
 { 
-    
-    //======================================================================================================================
-    //
-    // OPENCL INITIALIZATION
-    //    
-
-    // ------------------------------------------------------------------------------------
-    // Step 1: Initialize the OpenCL environment
-     // ------------------------------------------------------------------------------------
-
-    cl_int err;
-    std::string binaryFile = "encoder.xclbin";
-    unsigned fileBufSize;
-    std::vector<cl::Device> devices = get_xilinx_devices();
-    devices.resize(1);
-    cl::Device device = devices[0];
-    cl::Context context(device, NULL, NULL, NULL, &err);
-    char *fileBuf = read_binary_file(binaryFile, fileBufSize);
-    cl::Program::Binaries bins{{fileBuf, fileBufSize}};
-    cl::Program program(context, devices, bins, NULL, &err);
-
-    cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE, &err); 
-    cl::Kernel kernel_lzw(program, "lzw_hw_streams", &err);
 
     std::vector<cl::Event> write_event(1);
     std::vector<cl::Event> compute_event(1);
     std::vector<cl::Event> done_event(1);
-
-
-    cl::Buffer in_buf = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * MAX_CHUNK_SIZE, NULL, &err);
-    cl::Buffer out_buf = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13, NULL, &err);
-
-    unsigned char* outputChunk = (unsigned char *)q.enqueueMapBuffer(in_buf, CL_TRUE, CL_MAP_WRITE, 
-                                                        0, sizeof(unsigned char)*MAX_CHUNK_SIZE);
-    unsigned char* tempbuf = (unsigned char *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_READ, 
-                                                        0, sizeof(unsigned char)*(MAX_CHUNK_SIZE / 8) * 13);
-
-    //
-    //============================================================================================================================
-    //
-
 
     //
     // Variable to keep track of chunk progress. return from function 
@@ -73,13 +38,13 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float*
         total_time.start();
         // RUN CDC
         time_cdc.start();
-        int chunksize = runCDC(inputBuf, outputChunk, length, &lastChunkIdx);
+        uint64_t chunksize = runCDC(inputBuf, outputChunk, length, &lastChunkIdx);
         time_cdc.stop();
 
         packetTracker += chunksize - 1;
 
         time_sha.start();
-        SHA_new((char *) outputChunk,digest);
+        SHA_new((char *) outputChunk, chunksize, digest);
         time_sha.stop();
         digest[SHA256_DIGEST_SIZE] = '\0';
 
@@ -97,7 +62,7 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float*
             time_lzw.start();
             
             kernel_lzw.setArg(0, in_buf);
-            kernel_lzw.setArg(1, chunksize);
+            kernel_lzw.setArg(1, (int) chunksize);
             kernel_lzw.setArg(2, out_buf);
 
             //count = run_LZW(outputChunk, chunksize, tempBuf, count);
@@ -141,7 +106,6 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float*
     }
 
     q.finish();
-    delete[] fileBuf;
 
     std::cout << "Total latency of CDC is: " << time_cdc.latency() << " ms." << std::endl;
     std::cout << "Total latency of SHA is: " << time_sha.latency() << " ms." << std::endl;

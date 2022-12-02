@@ -92,7 +92,7 @@ void pin_main_thread_to_cpu0()
 // CORE 3 - interface with FPGA/LZW, store output
 //           check output of dedup, it it is -1 run LZW, otherwise just output the code
 
-void core_1_process () {
+void core_1_process (int* num_packets_done, ) {
 
 }
 
