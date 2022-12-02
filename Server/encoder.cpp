@@ -106,13 +106,48 @@ int main(int argc, char* argv[]) {
 	// top function here.
 	//memcpy(&file[offset], &buffer[HEADER], length);
 
+	    //======================================================================================================================
+    //
+    // OPENCL INITIALIZATION
+    //    
+
+    // ------------------------------------------------------------------------------------
+    // Step 1: Initialize the OpenCL environment
+     // ------------------------------------------------------------------------------------
+
+    cl_int err;
+    std::string binaryFile = "encoder.xclbin";
+    unsigned fileBufSize;
+    std::vector<cl::Device> devices = get_xilinx_devices();
+    devices.resize(1);
+    cl::Device device = devices[0];
+    cl::Context context(device, NULL, NULL, NULL, &err);
+    char *fileBuf = read_binary_file(binaryFile, fileBufSize);
+    cl::Program::Binaries bins{{fileBuf, fileBufSize}};
+    cl::Program program(context, devices, bins, NULL, &err);
+
+    cl::CommandQueue q(context, device, CL_QUEUE_PROFILING_ENABLE, &err); 
+    cl::Kernel kernel_lzw(program, "lzw_hw_streams", &err);
+
+    cl::Buffer in_buf = cl::Buffer(context, CL_MEM_READ_ONLY, sizeof(unsigned char) * MAX_CHUNK_SIZE, NULL, &err);
+    cl::Buffer out_buf = cl::Buffer(context, CL_MEM_WRITE_ONLY, sizeof(unsigned char) * (MAX_CHUNK_SIZE / 8) * 13, NULL, &err);
+
+    unsigned char* outputChunk = (unsigned char *)q.enqueueMapBuffer(in_buf, CL_TRUE, CL_MAP_WRITE, 
+                                                        0, sizeof(unsigned char)*MAX_CHUNK_SIZE);
+    unsigned char* tempbuf = (unsigned char *)q.enqueueMapBuffer(out_buf, CL_TRUE, CL_MAP_READ, 
+                                                        0, sizeof(unsigned char)*(MAX_CHUNK_SIZE / 8) * 13);
+
+    //
+    //============================================================================================================================
+    //
+
 	//
 	// OUR APP IS CALLED HERE
 	// INPUT -> buffer[2] : Since first two bytes are read above (no message body)
 	// Output -> file[offset]  : Pointer to output; offset incremented after every packet read
 	// length -> Length of each packet 
 	//
-	int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, &kernel_time, &non_lzw);
+	int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, &kernel_time, &non_lzw, q, kernel_lzw, in_buf, out_buf, outputChunk, tempbuf);
 
 	offset += output_ptr;
 	writer++;
@@ -138,7 +173,7 @@ int main(int argc, char* argv[]) {
 		length = buffer[0] | (buffer[1] << 8);
 		length &= ~DONE_BIT_H;
 		total_length += length;
-		//printf("length: %d offset %d\n",length,offset);
+		//printf("total length: %d offset %d\n",total_length,offset);
 		//memcpy(&file[offset], &buffer[HEADER], length);
 
 
@@ -148,7 +183,7 @@ int main(int argc, char* argv[]) {
 		// Output -> file[2]  : Pointer to output
 		// length -> Length of each packet 
 		//
-		int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, &kernel_time, &non_lzw);
+		int output_ptr = runApp(&buffer[HEADER], &file[offset], length, &runtime, &bytes_dropped, &kernel_time, &non_lzw, q, kernel_lzw, in_buf, out_buf, outputChunk, tempbuf);
 
 		offset += output_ptr;
 		writer++;
@@ -186,6 +221,7 @@ int main(int argc, char* argv[]) {
 	std::cout << "Total Kernel Time: " << kernel_time_ms << " ms" << std::endl;
 	std::cout << "Kernel Bandwidth: " << (total_megabits / kernel_time_ms) * 1000 << "Mb/s" << std::endl;
 
+	delete[] fileBuf;
 	return 0;
 }
 
