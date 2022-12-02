@@ -1,7 +1,7 @@
 #include "App.h"
 
 int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float* runtime, int* bytes_dropped, float* kernel_time, 
-        float* non_lzw, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
+        float* cdc_time, float* sha_time, float* dedup_time, float* lzw_time, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
         unsigned char* tempbuf)
 { 
 
@@ -107,6 +107,8 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float*
 
     q.finish();
 
+
+    #ifdef DEBUG
     std::cout << "Total latency of CDC is: " << time_cdc.latency() << " ms." << std::endl;
     std::cout << "Total latency of SHA is: " << time_sha.latency() << " ms." << std::endl;
     std::cout << "Total latency of Dedup is: " << time_dedup.latency() << " ms." << std::endl;
@@ -119,8 +121,13 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float*
     std::cout << "Average latency of LZW per loop iteration is: " << time_lzw.avg_latency() << " ms." << std::endl;
     std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ms." << std::endl;
     std::cout << "Total Kernel Execution Time: " << total_kernel_execution_time / 1000000 << " ms." << std::endl;
+    #endif
+
     *runtime += total_time.latency();
     *kernel_time += total_kernel_execution_time;
-    *non_lzw += time_cdc.latency() + time_sha.latency() + time_dedup.latency();
+    *cdc_time += time_cdc.latency();
+    *sha_time += time_sha.latency();
+    *dedup_time += time_dedup.latency();
+    *lzw_time += time_lzw.latency();
     return output_ptr;
 }

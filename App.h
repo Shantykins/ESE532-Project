@@ -59,7 +59,7 @@ struct VectorHasher {
 // Main Application
 //
 int runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length, float* runtime, int* bytes_dropped, float* kernel_time, 
-            float* non_lzw, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
+            float* cdc_time, float* sha_time, float* dedup_time, float* lzw_time, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
             unsigned char* tempbuf);
 
 //
