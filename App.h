@@ -7,6 +7,8 @@
 #define CL_HPP_ENABLE_PROGRAM_CONSTRUCTION_FROM_ARRAY_COMPATIBILITY 1
 #define CL_USE_DEPRECATED_OPENCL_1_2_APIS
 
+#define SHA256_DIGEST_SIZE 32
+
 #include "Server/encoder.h"
 //#include "Server/server.h"
 #include "Server/stopwatch.h"
@@ -15,8 +17,8 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <wolfssl/options.h>
-#include <wolfssl/wolfcrypt/sha256.h>
+//#include <wolfssl/options.h>
+//#include <wolfssl/wolfcrypt/sha256.h>
 #include <vector>
 #include <CL/cl2.hpp>
 #include <fstream>
@@ -56,9 +58,9 @@ struct VectorHasher {
 //
 // Main Application
 //
-int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* runtime, int* bytes_dropped,
-        cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
-        unsigned char* tempbuf);
+int runApp(unsigned char* inputBuf, unsigned char* outputBuf ,int length, float* runtime, int* bytes_dropped, float* kernel_time, 
+            float* cdc_time, float* sha_time, float* dedup_time, float* lzw_time, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
+            unsigned char* tempbuf);
 
 //
 // CDC Function
@@ -72,7 +74,7 @@ int run_LZW (unsigned char input_chunk[], int chunkSize, unsigned char output[],
 //
 // SHA 
 //
-void SHA_new(char* message, char* digest);
+void SHA_new(char* message, uint64_t chunksize, char* digest);
 
 //
 // De-duplication

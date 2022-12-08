@@ -4,7 +4,7 @@
 #include<stdio.h>
 #include <unordered_map>
 #include <vector>
-#include <wolfssl/wolfcrypt/sha256.h>
+//#include <wolfssl/wolfcrypt/sha256.h>
 #include "../App.h"
 
 using namespace std;

@@ -8,8 +8,12 @@
 #define WIN_SIZE 12
 #define PRIME 3
 #define MODULUS 4096
-#define TARGET 0
-#define NUM_THREADS 4
+#define TARGET 1
+
+//
+// Assume prime = 3
+//
+uint64_t powPrime[WIN_SIZE + 2] = {1, 3, 9, 27, 81, 243, 729, 2187, 6561, 19683, 59049, 177147, 531441, 1594323};
 
 //
 // Assume prime = 3

@@ -1,9 +1,13 @@
 #include "App.h"
 
-int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* runtime, int* bytes_dropped,
-        cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
+int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, float* runtime, int* bytes_dropped, float* kernel_time, 
+        float* cdc_time, float* sha_time, float* dedup_time, float* lzw_time, cl::CommandQueue q, cl::Kernel kernel_lzw, cl::Buffer in_buf, cl::Buffer out_buf, unsigned char* outputChunk, 
         unsigned char* tempbuf)
 { 
+
+    std::vector<cl::Event> write_event(1);
+    std::vector<cl::Event> compute_event(1);
+    std::vector<cl::Event> done_event(1);
 
     //
     // Variable to keep track of chunk progress. return from function 
@@ -38,13 +42,13 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
         total_time.start();
         // RUN CDC
         time_cdc.start();
-        int chunksize = runCDC(inputBuf, outputChunk, length, &lastChunkIdx);
+        uint64_t chunksize = runCDC(inputBuf, outputChunk, length, &lastChunkIdx);
         time_cdc.stop();
 
         packetTracker += chunksize - 1;
 
         time_sha.start();
-        SHA_new((char *) outputChunk,digest);
+        SHA_new((char *) outputChunk, chunksize, digest);
         time_sha.stop();
         digest[SHA256_DIGEST_SIZE] = '\0';
 
@@ -61,7 +65,7 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
             time_lzw.start();
             
             kernel_lzw.setArg(0, in_buf);
-            kernel_lzw.setArg(1, chunksize);
+            kernel_lzw.setArg(1, (int) chunksize);
             kernel_lzw.setArg(2, out_buf);
 
             //count = run_LZW(outputChunk, chunksize, tempBuf, count);
@@ -105,8 +109,9 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     }
 
     q.finish();
-    delete[] fileBuf;
 
+
+    #ifdef DEBUG
     std::cout << "Total latency of CDC is: " << time_cdc.latency() << " ms." << std::endl;
     std::cout << "Total latency of SHA is: " << time_sha.latency() << " ms." << std::endl;
     std::cout << "Total latency of Dedup is: " << time_dedup.latency() << " ms." << std::endl;
@@ -119,8 +124,13 @@ int runApp(unsigned char* inputBuf, unsigned char* outputBuf, int length, int* r
     std::cout << "Average latency of LZW per loop iteration is: " << time_lzw.avg_latency() << " ms." << std::endl;
     std::cout << "Average latency of each loop iteration is: " << total_time.avg_latency() << " ms." << std::endl;
     std::cout << "Total Kernel Execution Time: " << total_kernel_execution_time / 1000000 << " ms." << std::endl;
+    #endif
+
     *runtime += total_time.latency();
     *kernel_time += total_kernel_execution_time;
-    *non_lzw += time_cdc.latency() + time_sha.latency() + time_dedup.latency();
+    *cdc_time += time_cdc.latency();
+    *sha_time += time_sha.latency();
+    *dedup_time += time_dedup.latency();
+    *lzw_time += time_lzw.latency();
     return output_ptr;
 }
